@@ -19,13 +19,6 @@
     --text:#1a1c19; --muted:#6c706c; --border:#e0e3e0;
     --thumb-bg:#f4f6f4; --subtab-bg:#e4e7e4;
   }
-  @media (prefers-color-scheme: dark){
-    :root{
-      --bg:#141613; --panel:#1f221e; --accent:#6bb867; --accent-light:#82cf7e;
-      --text:#eef1ee; --muted:#9aa09a; --border:#2e332c;
-      --thumb-bg:#242822; --subtab-bg:#2a2f27;
-    }
-  }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
   body{
@@ -33,7 +26,7 @@
     height:100vh; height:100dvh;
     display:flex; flex-direction:column;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    overflow:hidden; transition:background .3s,color .3s;
+    overflow:hidden;
   }
   body.locked{overflow:hidden;}
 
@@ -75,7 +68,8 @@
   .photo-box{background:#111; border-radius:12px; flex-grow:1; position:relative; overflow:hidden;
     display:flex; align-items:center; justify-content:center; border:1px solid #2a2c26;
     min-height:200px; touch-action:pan-y;}
-  .photo-img{width:100%; height:100%; object-fit:contain; cursor:zoom-in;}
+  .photo-img{width:100%; height:100%; object-fit:contain; cursor:zoom-in;
+    opacity:1; transition:opacity .18s ease;}
 
   .loader{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
     width:32px; height:32px; border-radius:50%; border:3px solid rgba(255,255,255,.2);
@@ -183,11 +177,11 @@
 
   <div class="main-content" id="mainContent">
     <div class="drawing-box" id="drawingBox">
-      <img id="drawing" class="drawing-img" alt="Чертёж" loading="lazy">
+      <img id="drawing" class="drawing-img" alt="Чертёж">
       <div id="info" class="drawing-info"></div>
     </div>
     <div class="photo-box" id="photoBox">
-      <img id="photo" class="photo-img" alt="Фото" loading="lazy">
+      <img id="photo" class="photo-img" alt="Фото">
       <div id="loader" class="loader"></div>
       <div id="counter" class="photo-counter"></div>
       <div id="dots" class="dots"></div>
@@ -210,7 +204,7 @@
   </div>
 
 <script>
-  const VERSION = null; // поставьте строку версии, чтобы сбросить кэш у всех
+  const VERSION = null; // при обновлении файлов на сервере поставьте строку, напр. '2026-11'
 
   const DATA = [
     { title:'Мойки', subcats:[
@@ -303,6 +297,8 @@
   const getModel = () => (DATA[currentCat].subcats[currentSubCat].models || [])[currentModel];
   const getPhotos = () => { const m = getModel(); return (m && m.photos) ? m.photos : []; };
 
+  let currentPhotoSrc = '';
+
   function syncDots(container,total,activeIdx,cls){
     while(container.children.length<total){ const d=document.createElement('div'); d.className=cls; container.appendChild(d); }
     while(container.children.length>total){ container.removeChild(container.lastChild); }
@@ -317,7 +313,7 @@
       btn.className='tab'+(i===currentCat?' active':'');
       btn.textContent=cat.title;
       btn.onclick=()=>{
-        currentCat=i; currentSubCat=0; currentModel=0; currentPhoto=0;
+        currentCat=i; currentSubCat=0; currentModel=0; currentPhoto=0; currentPhotoSrc='';
         renderTabs(); renderSubTabs(); renderModels(); updateView();
         btn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
       };
@@ -335,7 +331,7 @@
         btn.className='sub-tab'+(i===currentSubCat?' active':'');
         btn.textContent=sub.name;
         btn.onclick=()=>{
-          currentSubCat=i; currentModel=0; currentPhoto=0;
+          currentSubCat=i; currentModel=0; currentPhoto=0; currentPhotoSrc='';
           renderSubTabs(); renderModels(); updateView();
           btn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
         };
@@ -354,22 +350,45 @@
       div.className='model-thumb'+(i===currentModel?' active':'');
       if(model.drawing){
         const img=document.createElement('img');
-        img.loading='lazy'; img.alt=model.name; img.src=withVersion(model.drawing);
+        img.loading='lazy';
+        img.decoding='async';
+        img.alt=model.name;
+        img.src=withVersion(model.drawing);
         img.onerror=()=>{ img.remove(); div.innerHTML=`<span>${model.name}</span>`; };
         div.appendChild(img);
       } else div.innerHTML=`<span>${model.name}</span>`;
-      div.onclick=()=>{ currentModel=i; currentPhoto=0; renderModels(); updateView();
-        div.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); };
+      div.onclick=()=>{
+        currentModel=i; currentPhoto=0; currentPhotoSrc='';
+        renderModels(); updateView();
+        div.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+      };
       stripEl.appendChild(div);
     });
   }
 
   function loadPhoto(url){
+    if(url === currentPhotoSrc){
+      loaderEl.classList.remove('show');
+      photoEl.style.opacity='1';
+      photoEl.style.display='block';
+      return;
+    }
+    currentPhotoSrc = url;
     loaderEl.classList.add('show');
-    const temp=new Image();
-    temp.onload=()=>{ photoEl.src=url; photoEl.style.display='block'; loaderEl.classList.remove('show'); };
-    temp.onerror=()=>{ loaderEl.classList.remove('show'); photoEl.style.display='none'; photoEl.alt='Не удалось загрузить фото'; };
-    temp.src=url;
+    photoEl.style.opacity='0';
+
+    photoEl.onload = () => {
+      loaderEl.classList.remove('show');
+      photoEl.style.display='block';
+      photoEl.style.opacity='1';
+    };
+    photoEl.onerror = () => {
+      loaderEl.classList.remove('show');
+      photoEl.style.display='none';
+      photoEl.alt='Не удалось загрузить фото';
+    };
+    photoEl.decoding='async';
+    photoEl.src = url;
   }
 
   function updateView(){
@@ -392,13 +411,16 @@
       drawEl.alt='Чертёж: '+model.name;
       drawEl.onerror=()=>{ drawEl.style.display='none'; };
       drawEl.onload=()=>{ drawEl.style.display='block'; };
-      drawEl.src=withVersion(model.drawing);
+      drawEl.decoding='async';
+      const drawUrl = withVersion(model.drawing);
+      if(drawEl.src !== drawUrl) drawEl.src = drawUrl;
     } else drawingBoxEl.style.display='none';
 
     if(hasPhotos){
       photoBox.style.display='flex';
       photoEl.alt=`Фото: ${model.name} (${currentPhoto+1} из ${model.photos.length})`;
       loadPhoto(withVersion(model.photos[currentPhoto]));
+
       if(model.photos.length>1){
         btnPrev.classList.add('show'); btnNext.classList.add('show');
         counterEl.classList.add('show'); counterEl.textContent=`${currentPhoto+1} / ${model.photos.length}`;
@@ -409,6 +431,7 @@
       }
     } else {
       photoBox.style.display='none'; photoEl.removeAttribute('src');
+      currentPhotoSrc='';
       btnPrev.classList.remove('show'); btnNext.classList.remove('show');
       counterEl.classList.remove('show'); dotsEl.classList.remove('show'); dotsEl.innerHTML='';
       loaderEl.classList.remove('show');
@@ -441,11 +464,11 @@
   /* ===== Полноэкранный просмотр ===== */
   let lbScale=1, lbX=0, lbY=0;
   const MIN_SCALE=1, MAX_SCALE=4;
-  function applyLbTransform(){
-    lbImg.style.transform=`translate(${lbX}px, ${lbY}px) scale(${lbScale})`;
+  function applyLbTransform(){ lbImg.style.transform=`translate(${lbX}px, ${lbY}px) scale(${lbScale})`; }
+  function resetLbTransform(){
+    lbScale=1; lbX=0; lbY=0; lbImg.classList.add('dragging'); applyLbTransform();
+    requestAnimationFrame(()=>lbImg.classList.remove('dragging'));
   }
-  function resetLbTransform(){ lbScale=1; lbX=0; lbY=0; lbImg.classList.add('dragging'); applyLbTransform();
-    requestAnimationFrame(()=>lbImg.classList.remove('dragging')); }
 
   function openLightbox(){
     const photos=getPhotos();
@@ -462,8 +485,8 @@
   function lbShowPhoto(){
     const photos=getPhotos();
     if(!photos.length) return;
-    const src=withVersion(photos[currentPhoto]);
-    lbImg.src=src;
+    lbImg.decoding='async';
+    lbImg.src=withVersion(photos[currentPhoto]);
     lbCounter.textContent=`${currentPhoto+1} / ${photos.length}`;
     if(photos.length>1){
       lbPrev.classList.add('show'); lbNext.classList.add('show');
@@ -478,7 +501,7 @@
     const photos=getPhotos();
     if(photos.length<=1) return;
     currentPhoto=(currentPhoto+dir+photos.length)%photos.length;
-    updateView();       // синхронизируем главный экран
+    updateView();
     lbShowPhoto();
   }
 
@@ -486,10 +509,8 @@
   lbPrev.onclick=()=>lbChange(-1);
   lbNext.onclick=()=>lbChange(1);
 
-  // Открытие по клику/тапу на главном фото
   photoEl.addEventListener('click',openLightbox);
 
-  // Жесты в лайтбоксе
   let lbTouchStartX=0, lbTouchStartY=0, lbTouchStartTime=0;
   let lbPinchStartDist=0, lbPinchStartScale=1;
   let lbIsDragging=false, lbDragStartX=0, lbDragStartY=0;
@@ -540,7 +561,6 @@
     if(e.touches.length===0 && lbPinchStartDist>0){
       lbPinchStartDist=0;
       if(lbScale<1.05){ lbScale=1; lbX=0; lbY=0; }
-      // ограничение выхода за края при увеличении
       clampLbPan();
       lbImg.classList.remove('dragging');
       applyLbTransform();
@@ -553,22 +573,14 @@
       const dt=now-lbTouchStartTime;
       const absX=Math.abs(dx), absY=Math.abs(dy);
 
-      // Свайп вниз для закрытия (когда не увеличено)
       if(lbScale<=1.05 && dy>120 && absY>absX*1.5 && dt<500){ closeLightbox(); return; }
+      if(lbScale<=1.05 && absX>60 && absX>absY*1.5 && dt<500){ lbChange(dx<0?1:-1); return; }
 
-      // Свайп-листание (когда не увеличено)
-      if(lbScale<=1.05 && absX>60 && absX>absY*1.5 && dt<500){
-        lbChange(dx<0?1:-1); return;
-      }
-
-      // Тап / двойной тап
       if(absX<8 && absY<8 && dt<300){
         if(now-lbLastTap<300){
-          // двойной тап
           if(lbScale>1){ lbScale=1; lbX=0; lbY=0; }
           else {
             lbScale=2.5;
-            // зум в точку тапа
             const rect=lbStage.getBoundingClientRect();
             const cx=e.changedTouches[0].clientX-rect.left-rect.width/2;
             const cy=e.changedTouches[0].clientY-rect.top-rect.height/2;
@@ -588,14 +600,12 @@
   function clampLbPan(){
     if(lbScale<=1){ lbX=0; lbY=0; return; }
     const rect=lbStage.getBoundingClientRect();
-    const w=rect.width, h=rect.height;
-    const maxX=(w*(lbScale-1))/2;
-    const maxY=(h*(lbScale-1))/2;
+    const maxX=(rect.width*(lbScale-1))/2;
+    const maxY=(rect.height*(lbScale-1))/2;
     lbX=Math.max(-maxX,Math.min(maxX,lbX));
     lbY=Math.max(-maxY,Math.min(maxY,lbY));
   }
 
-  // Колесо мыши для зума в лайтбоксе (десктоп)
   lightbox.addEventListener('wheel',e=>{
     if(!lightbox.classList.contains('show')) return;
     e.preventDefault();
@@ -603,7 +613,6 @@
     clampLbPan(); applyLbTransform();
   },{passive:false});
 
-  // Esc закрывает
   document.addEventListener('keydown',e=>{
     if(!lightbox.classList.contains('show')) return;
     if(e.key==='Escape') closeLightbox();
