@@ -20,8 +20,8 @@
   
   body{
     background:var(--bg); color:var(--text); 
-    height: 100vh; /* Для старых браузеров */
-    height: 100dvh; /* Современная высота, учитывающая панели браузера */
+    height: 100vh; 
+    height: 100dvh; 
     display:flex; flex-direction:column;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     overflow:hidden;
@@ -44,22 +44,37 @@
   }
   .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; box-shadow: 0 4px 12px rgba(85, 156, 81, 0.3); }
 
+  .sub-tabs {
+    display: none; gap: 8px; justify-content: flex-start; margin-top: 8px;
+    overflow-x: auto; padding-bottom: 2px; padding-left: 5px; padding-right: 5px;
+    width: 100%; animation: fadeIn 0.3s ease;
+  }
+  .sub-tabs.show { display: flex; }
+  .sub-tabs::-webkit-scrollbar { display: none; }
+  .sub-tab {
+    padding: 5px 14px; border-radius: 12px; cursor: pointer; white-space: nowrap;
+    border: none; background: rgba(255,255,255,0.05);
+    color: var(--text); font-size: 12px; transition: all 0.3s ease;
+  }
+  .sub-tab.active { background: rgba(85, 156, 81, 0.2); color: var(--accent-light); font-weight: 600; border: 1px solid var(--accent); }
+  
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
   /* ===== ОСНОВНОЙ БЛОК ===== */
   .main-content { flex-grow: 1; display: flex; flex-direction: column; padding: 8px 12px; gap: 10px; overflow: hidden; }
   
-  /* Блок с чертежом */
   .drawing-box {
     background: #fff; border-radius: 12px; padding: 6px 10px; 
-    height: 20vh; /* Чуть уменьшили, чтобы дать место фото */
+    height: 20vh; 
     display: flex; flex-direction: column; align-items: center; justify-content: space-between;
     flex-shrink: 0; position: relative;
     border-top: 4px solid var(--accent); 
     box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    transition: height 0.3s ease; 
   }
   .drawing-img { width: 100%; height: calc(100% - 20px); object-fit: contain; }
-  .drawing-info { text-align: center; color: #333; font-size: 13px; font-weight: 700; width: 100%; line-height: 1.1; }
+  .drawing-info { text-align: center; color: #333; font-size: 14px; font-weight: 700; width: 100%; line-height: 1.1; padding-top: 4px; }
   
-  /* Блок с живыми фото */
   .photo-box {
     background: #111; border-radius: 12px; flex-grow: 1; position: relative; overflow: hidden;
     display: flex; align-items: center; justify-content: center;
@@ -67,7 +82,17 @@
   }
   .photo-img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
   
-  /* Стрелки */
+  /* --- РЕЖИМЫ ОТОБРАЖЕНИЯ --- */
+  /* Если только чертеж (нет фото) */
+  .main-content.single-view .photo-box { display: none !important; }
+  .main-content.single-view .drawing-box { height: 100%; flex-grow: 1; padding: 20px 15px; }
+  .main-content.single-view .drawing-img { height: calc(100% - 30px); }
+
+  /* Если только фото (нет чертежа) */
+  .main-content.photo-only .drawing-box { display: none !important; }
+  .main-content.photo-only .photo-box { width: 100%; height: 100%; }
+
+  /* Стрелки, счетчик и точки */
   .nav-btn {
     position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px;
     background: rgba(85, 156, 81, 0.9); border: none; border-radius: 50%; color: #fff;
@@ -78,7 +103,6 @@
   .nav-prev { left: 12px; }
   .nav-next { right: 12px; }
   
-  /* Счетчик и точки */
   .photo-counter {
     position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.8);
     color: #fff; font-size: 12px; padding: 4px 10px; border-radius: 10px; display: none; z-index: 10;
@@ -92,7 +116,6 @@
   /* ===== ЛЕНТА МОДЕЛЕЙ ===== */
   .model-strip {
     flex-shrink: 0; 
-    /* Увеличили отступ снизу, чтобы поднять миниатюры над кнопками телефона */
     padding: 12px 12px calc(30px + env(safe-area-inset-bottom)); 
     display: flex; gap: 12px; overflow-x: auto;
     scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
@@ -101,17 +124,16 @@
   .model-strip::-webkit-scrollbar { display: none; }
   
   .model-thumb {
-    flex: 0 0 70px; height: 70px; /* Чуть уменьшили, чтобы не перекрывать фото */
+    flex: 0 0 70px; height: 70px; 
     border-radius: 10px; background: #fff;
     display: flex; align-items: center; justify-content: center; cursor: pointer;
     border: 2px solid transparent; transition: all 0.2s ease; overflow: hidden;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
   }
   .model-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
-  
   .model-thumb.active { 
     border-color: var(--accent); 
-    transform: translateY(-2px) scale(1.02); /* Меньше сдвиг, чтобы не обрезалось */
+    transform: translateY(-2px) scale(1.02); 
     box-shadow: 0 6px 15px rgba(85, 156, 81, 0.5); 
   }
   .model-thumb span { font-size: 12px; color: #333; font-weight: 700; text-align: center; line-height: 1.1; }
@@ -119,11 +141,17 @@
   /* ===== ДЕСКТОПНАЯ ВЕРСИЯ ===== */
   @media (min-width: 768px) {
     .site-logo { height: 70px; } 
-    .tabs { justify-content: center; }
-    .main-content { flex-direction: row; padding: 20px; gap: 20px; height: calc(100vh - 160px); }
+    .tabs, .sub-tabs { justify-content: center; }
+    .main-content { flex-direction: row; padding: 20px; gap: 20px; height: calc(100vh - 170px); }
+    
     .drawing-box { width: 25%; height: 100%; padding: 15px 10px; border-top: none; border-left: 6px solid var(--accent); } 
     .drawing-info { font-size: 16px; }
+    
     .photo-box { width: 75%; height: 100%; }
+    
+    .main-content.single-view .drawing-box { width: 100%; border-left: none; border-top: 6px solid var(--accent); }
+    .main-content.photo-only .photo-box { width: 100%; height: 100%; }
+    
     .model-strip { padding: 15px 20px; justify-content: center; border-radius: 16px; margin: 0 20px 20px; border: 1px solid #2a2c26; }
     .model-thumb { flex: 0 0 80px; height: 80px; }
   }
@@ -134,11 +162,13 @@
   <div class="header">
     <img src="logo.png" alt="Азбука Акрила" class="site-logo" onerror="this.style.display='none'; document.getElementById('text-title').style.display='block';">
     <div id="text-title" style="display:none; font-size: 22px; font-weight: 600; margin-bottom: 10px; color: var(--accent);">Азбука Акрила</div>
+    
     <div class="tabs" id="tabs"></div>
+    <div class="sub-tabs" id="subTabs"></div>
   </div>
 
-  <div class="main-content">
-    <div class="drawing-box">
+  <div class="main-content" id="mainContent">
+    <div class="drawing-box" id="drawingBox">
       <img id="drawing" class="drawing-img" src="" alt="Чертеж">
       <div id="info" class="drawing-info"></div>
     </div>
@@ -157,60 +187,143 @@
 <script>
   const DATA = [
     {
-      title: 'Раковины (Ванная)',
-      models: [
-        { name: 'Модель 201', size: '390×390×110 мм', drawing: 'draw-201.jpg', photos: ['photo-201-1.jpg'] },
-        { name: 'Модель 202', size: '400×300×100 мм', drawing: 'draw-202.jpg', photos: ['photo-202-1.jpg'] },
-        { name: 'Модель 203', size: '545×390×120 мм', drawing: 'draw-203.jpg', photos: ['photo-203-1.jpg'] },
-        { name: 'Модель 204', size: '400×250×100 мм', drawing: 'draw-204.jpg', photos: [] },
-        { name: 'Модель 205', size: '520×370×130 мм', drawing: 'draw-205.jpg', photos: ['photo-205-1.jpg'] },
-        { name: 'Модель 205R', size: '620×370×130 мм', drawing: 'draw-205R.jpg', photos: [] },
-        { name: 'Модель 206', size: '660×300×120 мм', drawing: 'draw-206.jpg', photos: [] },
-        { name: 'Модель 210', size: '300-600×250-600×120 мм', drawing: 'draw-210.jpg', photos: [] },
-        { name: 'Модель 211', size: '300-600×250-600×120 мм', drawing: 'draw-211.jpg', photos: [] }
+      title: 'Мойки',
+      subcats: [
+        {
+          name: 'Для ванной',
+          models: [
+            { name: 'Модель 201', drawing: 'draw-201.jpg', photos: ['photo-201-1.jpg', 'photo-201-2.jpg', 'photo-201-3.jpg'] },
+            { name: 'Модель 202', drawing: 'draw-202.jpg', photos: ['photo-202-1.jpg', 'photo-202-2.jpg', 'photo-202-3.jpg'] },
+            { name: 'Модель 203', drawing: 'draw-203.jpg', photos: ['photo-203-1.jpg', 'photo-203-2.jpg', 'photo-203-3.jpg'] },
+            { name: 'Модель 206', drawing: 'draw-206.jpg', photos: ['photo-206-1.jpg', 'photo-206-2.jpg', 'photo-206-3.jpg'] },
+            { name: 'Модель 205', drawing: 'draw-205.jpg', photos: ['photo-205-1.jpg', 'photo-205-2.jpg', 'photo-205-3.jpg'] },
+            
+            /* ИЗМЕНЕНО НА 205L */
+            { name: 'Модель 205L', drawing: 'draw-205L.jpg', photos: ['photo-205L-1.jpg', 'photo-205L-2.jpg', 'photo-205L-3.jpg'] }, 
+            
+            { name: 'Модель 210', drawing: 'draw-210.jpg', photos: ['photo-210-1.jpg', 'photo-210-2.jpg', 'photo-210-3.jpg'] },
+            { name: 'Модель 211', drawing: 'draw-211.jpg', photos: ['photo-211-1.jpg', 'photo-211-2.jpg', 'photo-211-3.jpg'] },
+            { name: 'Модель КК', drawing: 'draw-KK.jpg', photos: ['photo-KK-1.jpg', 'photo-KK-2.jpg', 'photo-KK-3.jpg'] }
+          ]
+        },
+        {
+          name: 'Для кухни',
+          models: [
+            /* ИЗМЕНЕНО НА 300 */
+            { name: 'Модель 300', drawing: 'draw-300.jpg', photos: ['photo-300-1.jpg', 'photo-300-2.jpg', 'photo-300-3.jpg'] },
+            
+            { name: 'Модель 413', drawing: 'draw-413.jpg', photos: ['photo-413-1.jpg', 'photo-413-2.jpg', 'photo-413-3.jpg'] },
+            { name: 'Модель 450', drawing: 'draw-450.jpg', photos: ['photo-450-1.jpg', 'photo-450-2.jpg', 'photo-450-3.jpg'] },
+            { name: 'Модель 500', drawing: 'draw-500.jpg', photos: ['photo-500-1.jpg', 'photo-500-2.jpg', 'photo-500-3.jpg'] },
+            
+            /* ИЗМЕНЕНО НА 380 */
+            { name: 'Модель 380', drawing: 'draw-380.jpg', photos: ['photo-380-1.jpg', 'photo-380-2.jpg', 'photo-380-3.jpg'] },
+            
+            { name: 'Модель K', drawing: 'draw-K.jpg', photos: ['photo-K-1.jpg', 'photo-K-2.jpg', 'photo-K-3.jpg'] }
+          ]
+        },
+        {
+          name: 'Виды моек', hideStrip: true,
+          models: [
+            { 
+              name: 'Мойка на заказ', 
+              drawing: '', 
+              photos: [
+                'photo-custom-1-1.jpg', 
+                'photo-custom-1-2.jpg', 
+                'photo-custom-1-3.jpg',
+                'photo-custom-1-4.jpg',
+                'photo-custom-1-5.jpg',
+                'photo-custom-1-6.jpg',
+                'photo-custom-1-7.jpg',
+                'photo-custom-1-8.jpg',
+                'photo-custom-1-9.jpg',
+                'photo-custom-1-10.jpg'
+              ] 
+            }
+          ]
+        }
       ]
     },
     {
-      title: 'Кухонные мойки',
-      models: [
-        { name: 'Модель 413', size: '410×380×180 мм', drawing: 'draw-413.jpg', photos: ['photo-413-1.jpg', 'photo-413-2.jpg'] },
-        { name: 'Модель 450', size: '450×380×180 мм', drawing: 'draw-450.jpg', photos: ['photo-450-1.jpg'] },
-        { name: 'Модель 500', size: '500×380×180 мм', drawing: 'draw-500.jpg', photos: [] },
-        { name: 'Модель 422', size: '350×380×180 мм', drawing: 'draw-422.jpg', photos: [] },
-        { name: 'Модель 390', size: '500×380×180 мм (овальная)', drawing: 'draw-390.jpg', photos: [] },
-        { name: 'Модель 388', size: '380×380×180 мм (круглая)', drawing: 'draw-388.jpg', photos: [] },
-        { name: 'Модель 304', size: '170×380×140 мм', drawing: 'draw-304.jpg', photos: [] },
-        { name: 'Модель K', size: 'Индивидуальный размер', drawing: 'draw-K.jpg', photos: [] }
+      title: 'Панели',
+      subcats: [
+        {
+          name: 'Приставная', hideStrip: true,
+          models: [
+            { name: 'Панель приставная', drawing: 'draw-panel-1.jpg', photos: [] }
+          ]
+        },
+        {
+          name: 'Интегрированная', hideStrip: true,
+          models: [
+            { name: 'Панель интегрированная', drawing: 'draw-integ-1.jpg', photos: [] }
+          ]
+        }
       ]
     },
     {
-      title: 'Панель приставная',
-      models: [{ name: 'Панель П-1', size: 'Размеры', drawing: 'draw-panel-1.jpg', photos: [] }]
+      title: 'Виды бортиков',
+      subcats: [
+        {
+          name: 'Все',
+          models: [
+            { name: 'Галтель', drawing: 'draw-plint-1.jpg', photos: [] },
+            { name: 'Приставной', drawing: 'draw-plint-2.jpg', photos: [] },
+            { name: 'Интегрированный', drawing: 'draw-plint-3.jpg', photos: [] }
+          ]
+        }
+      ]
     },
     {
-      title: 'Панель интегрированная',
-      models: [{ name: 'Панель И-1', size: 'Размеры', drawing: 'draw-integ-1.jpg', photos: [] }]
+      title: 'Виды кромок',
+      subcats: [
+        {
+          name: 'Все',
+          models: [
+            { name: 'Фигурная', drawing: 'draw-kromka-1.jpg', photos: [] },
+            { name: 'R8 (Радиус 8 мм)', drawing: 'draw-kromka-2.jpg', photos: [] },
+            { name: 'R5 (Радиус 5 мм)', drawing: 'draw-kromka-3.jpg', photos: [] },
+            { name: 'R3 (Радиус 3 мм)', drawing: 'draw-kromka-4.jpg', photos: [] },
+            { name: '45 градусов', drawing: 'draw-kromka-5.jpg', photos: [] },
+            { name: 'Не проливайка (Защитный бортик)', drawing: 'draw-kromka-6.jpg', photos: [] }
+          ]
+        }
+      ]
     },
     {
-      title: 'Обнижение, проточки',
-      models: [{ name: 'Обнижение О-1', size: 'Размеры', drawing: 'draw-obn-1.jpg', photos: [] }]
+      title: 'Обнижение и проточки',
+      subcats: [
+        {
+          name: 'Все',
+          models: [
+            { name: 'Проточки', drawing: 'draw-obn-1.jpg', photos: [] },
+            { name: 'Обнижение и проточки', drawing: 'draw-obn-2.jpg', photos: [] },
+            { name: 'Проточки для конвекции воздуха', drawing: 'draw-obn-3.jpg', photos: [] }
+          ]
+        }
+      ]
     },
     {
-      title: 'Подоконники',
-      models: [{ name: 'Подоконник П-1', size: 'Размеры', drawing: 'draw-podok-1.jpg', photos: [] }]
-    },
-    {
-      title: 'Виды плинтуса',
-      models: [
-        { name: 'Галтель', size: 'Размеры', drawing: 'draw-plint-1.jpg', photos: [] },
-        { name: 'Приставной плинтус', size: 'Размеры', drawing: 'draw-plint-2.jpg', photos: [] },
-        { name: 'Интегрированный плинтус', size: 'Размеры', drawing: 'draw-plint-3.jpg', photos: [] }
+      title: 'Полки',
+      subcats: [
+        {
+          name: 'Все',
+          models: [
+            { name: 'Полка П-1', drawing: 'draw-shelf-1.jpg', photos: ['photo-shelf-1-1.jpg', 'photo-shelf-1-2.jpg', 'photo-shelf-1-3.jpg'] }
+          ]
+        }
       ]
     }
   ];
 
-  let currentCat = 0, currentModel = 0, currentPhoto = 0;
-  const tabsEl = document.getElementById('tabs'), stripEl = document.getElementById('modelStrip');
+  let currentCat = 0, currentSubCat = 0, currentModel = 0, currentPhoto = 0;
+  
+  const tabsEl = document.getElementById('tabs');
+  const subTabsEl = document.getElementById('subTabs');
+  const stripEl = document.getElementById('modelStrip');
+  const mainContentEl = document.getElementById('mainContent');
+  const drawingBoxEl = document.getElementById('drawingBox');
   const drawEl = document.getElementById('drawing'), infoEl = document.getElementById('info');
   const photoEl = document.getElementById('photo'), counterEl = document.getElementById('counter');
   const btnPrev = document.getElementById('btnPrev'), btnNext = document.getElementById('btnNext');
@@ -224,43 +337,102 @@
       btn.className = 'tab' + (i === currentCat ? ' active' : '');
       btn.textContent = cat.title;
       btn.onclick = () => { 
-        currentCat = i; currentModel = 0; currentPhoto = 0; 
-        renderTabs(); renderModels(); updateView(); 
+        currentCat = i; 
+        currentSubCat = 0; 
+        currentModel = 0; 
+        currentPhoto = 0; 
+        renderTabs(); 
+        renderSubTabs(); 
+        renderModels(); 
+        updateView(); 
         btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
       };
       tabsEl.appendChild(btn);
     });
   }
 
+  function renderSubTabs() {
+    subTabsEl.innerHTML = '';
+    const subcats = DATA[currentCat].subcats;
+    
+    if (subcats.length > 1) {
+      subTabsEl.classList.add('show');
+      subcats.forEach((sub, i) => {
+        const btn = document.createElement('div');
+        btn.className = 'sub-tab' + (i === currentSubCat ? ' active' : '');
+        btn.textContent = sub.name;
+        btn.onclick = () => {
+          currentSubCat = i;
+          currentModel = 0;
+          currentPhoto = 0;
+          renderSubTabs();
+          renderModels();
+          updateView();
+          btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        };
+        subTabsEl.appendChild(btn);
+      });
+    } else {
+      subTabsEl.classList.remove('show');
+    }
+  }
+
   function renderModels() {
     stripEl.innerHTML = '';
-    DATA[currentCat].models.forEach((model, i) => {
+    const subcat = DATA[currentCat].subcats[currentSubCat];
+    
+    if (subcat.hideStrip || !subcat.models || subcat.models.length <= 1) {
+      stripEl.style.display = 'none';
+      return;
+    } else {
+      stripEl.style.display = 'flex';
+    }
+
+    subcat.models.forEach((model, i) => {
       const div = document.createElement('div');
       div.className = 'model-thumb' + (i === currentModel ? ' active' : '');
+      
       const img = document.createElement('img');
-      img.src = model.drawing;
-      img.onerror = () => { img.style.display = 'none'; div.innerHTML = `<span>${model.name.replace('Модель ', '')}</span>`; };
-      div.appendChild(img);
+      if (model.drawing) {
+        img.src = model.drawing;
+        img.onerror = () => { img.style.display = 'none'; div.innerHTML = `<span>${model.name}</span>`; };
+        div.appendChild(img);
+      } else {
+        div.innerHTML = `<span>${model.name}</span>`;
+      }
+
       div.onclick = () => { currentModel = i; currentPhoto = 0; renderModels(); updateView(); div.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); };
       stripEl.appendChild(div);
     });
   }
 
   function updateView() {
-    const model = DATA[currentCat].models[currentModel];
+    const models = DATA[currentCat].subcats[currentSubCat].models || [];
+    const model = models[currentModel];
+    
     if (!model) {
       drawEl.src = ''; infoEl.textContent = 'Модели скоро появятся';
-      photoEl.src = ''; photoEl.style.display = 'none';
-      btnPrev.classList.remove('show'); btnNext.classList.remove('show'); 
-      counterEl.classList.remove('show'); dotsEl.classList.remove('show');
+      photoEl.src = ''; 
+      mainContentEl.className = 'main-content single-view';
       return;
     }
 
-    drawEl.src = model.drawing;
-    infoEl.textContent = `${model.name} · ${model.size}`;
+    mainContentEl.className = 'main-content';
     dotsEl.innerHTML = ''; 
-    
-    if (model.photos && model.photos.length > 0) {
+    infoEl.textContent = model.name; 
+
+    const hasDrawing = model.drawing && model.drawing.trim() !== '';
+    const hasPhotos = model.photos && model.photos.length > 0;
+
+    if (hasDrawing) {
+      drawingBoxEl.style.display = 'flex';
+      drawEl.src = model.drawing;
+    } else {
+      drawingBoxEl.style.display = 'none';
+    }
+
+    if (hasPhotos) {
+      photoBox.style.display = 'flex';
       photoEl.style.display = 'block';
       photoEl.src = model.photos[currentPhoto] + '?v=' + new Date().getTime();
       
@@ -277,13 +449,22 @@
         btnPrev.classList.remove('show'); btnNext.classList.remove('show'); counterEl.classList.remove('show'); dotsEl.classList.remove('show');
       }
     } else {
-      photoEl.src = ''; photoEl.alt = 'Живые фото скоро появятся';
-      btnPrev.classList.remove('show'); btnNext.classList.remove('show'); counterEl.classList.remove('show'); dotsEl.classList.remove('show');
+      photoBox.style.display = 'none';
+      photoEl.src = ''; 
+      btnPrev.classList.remove('show'); btnNext.classList.remove('show'); 
+      counterEl.classList.remove('show'); dotsEl.classList.remove('show');
+    }
+
+    if (hasDrawing && !hasPhotos) {
+      mainContentEl.classList.add('single-view'); 
+    } else if (!hasDrawing && hasPhotos) {
+      mainContentEl.classList.add('photo-only'); 
     }
   }
 
   function changePhoto(dir) {
-    const model = DATA[currentCat].models[currentModel];
+    const models = DATA[currentCat].subcats[currentSubCat].models || [];
+    const model = models[currentModel];
     if (!model || !model.photos || model.photos.length <= 1) return;
     currentPhoto = (currentPhoto + dir + model.photos.length) % model.photos.length;
     updateView();
@@ -300,7 +481,10 @@
     if (touchEndX > touchStartX + 30) changePhoto(-1);
   }, {passive: true});
 
-  renderTabs(); renderModels(); updateView();
+  renderTabs(); 
+  renderSubTabs();
+  renderModels(); 
+  updateView();
 </script>
 </body>
 </html>
