@@ -527,4 +527,92 @@
       e.preventDefault();
       const dx=e.touches[0].clientX-lbTouchStartX;
       const dy=e.touches[0].clientY-lbTouchStartY;
-      if(Math.abs(dx)>4||Math.abs(dy
+      if(Math.abs(dx)>4||Math.abs(dy)>4) lbIsDragging=true;
+      lbX=lbDragStartX+dx; lbY=lbDragStartY+dy;
+      lbImg.classList.add('dragging');
+      applyLbTransform();
+    }
+  },{passive:false});
+
+  lightbox.addEventListener('touchend',e=>{
+    const now=Date.now();
+
+    if(e.touches.length===0 && lbPinchStartDist>0){
+      lbPinchStartDist=0;
+      if(lbScale<1.05){ lbScale=1; lbX=0; lbY=0; }
+      // ограничение выхода за края при увеличении
+      clampLbPan();
+      lbImg.classList.remove('dragging');
+      applyLbTransform();
+      return;
+    }
+
+    if(e.changedTouches.length===1){
+      const dx=e.changedTouches[0].clientX-lbTouchStartX;
+      const dy=e.changedTouches[0].clientY-lbTouchStartY;
+      const dt=now-lbTouchStartTime;
+      const absX=Math.abs(dx), absY=Math.abs(dy);
+
+      // Свайп вниз для закрытия (когда не увеличено)
+      if(lbScale<=1.05 && dy>120 && absY>absX*1.5 && dt<500){ closeLightbox(); return; }
+
+      // Свайп-листание (когда не увеличено)
+      if(lbScale<=1.05 && absX>60 && absX>absY*1.5 && dt<500){
+        lbChange(dx<0?1:-1); return;
+      }
+
+      // Тап / двойной тап
+      if(absX<8 && absY<8 && dt<300){
+        if(now-lbLastTap<300){
+          // двойной тап
+          if(lbScale>1){ lbScale=1; lbX=0; lbY=0; }
+          else {
+            lbScale=2.5;
+            // зум в точку тапа
+            const rect=lbStage.getBoundingClientRect();
+            const cx=e.changedTouches[0].clientX-rect.left-rect.width/2;
+            const cy=e.changedTouches[0].clientY-rect.top-rect.height/2;
+            lbX=-cx*(lbScale-1); lbY=-cy*(lbScale-1);
+          }
+          lbImg.classList.add('dragging'); applyLbTransform();
+          setTimeout(()=>lbImg.classList.remove('dragging'),250);
+          lbLastTap=0;
+        } else lbLastTap=now;
+      }
+
+      if(lbIsDragging && lbScale>1){ clampLbPan(); applyLbTransform(); }
+      lbIsDragging=false;
+    }
+  },{passive:true});
+
+  function clampLbPan(){
+    if(lbScale<=1){ lbX=0; lbY=0; return; }
+    const rect=lbStage.getBoundingClientRect();
+    const w=rect.width, h=rect.height;
+    const maxX=(w*(lbScale-1))/2;
+    const maxY=(h*(lbScale-1))/2;
+    lbX=Math.max(-maxX,Math.min(maxX,lbX));
+    lbY=Math.max(-maxY,Math.min(maxY,lbY));
+  }
+
+  // Колесо мыши для зума в лайтбоксе (десктоп)
+  lightbox.addEventListener('wheel',e=>{
+    if(!lightbox.classList.contains('show')) return;
+    e.preventDefault();
+    lbScale=Math.min(MAX_SCALE,Math.max(MIN_SCALE,lbScale+(e.deltaY<0?0.2:-0.2)));
+    clampLbPan(); applyLbTransform();
+  },{passive:false});
+
+  // Esc закрывает
+  document.addEventListener('keydown',e=>{
+    if(!lightbox.classList.contains('show')) return;
+    if(e.key==='Escape') closeLightbox();
+    if(e.key==='ArrowLeft') lbChange(-1);
+    if(e.key==='ArrowRight') lbChange(1);
+  });
+
+  /* старт */
+  renderTabs(); renderSubTabs(); renderModels(); updateView();
+</script>
+</body>
+</html>
