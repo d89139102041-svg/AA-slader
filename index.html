@@ -5,15 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Азбука Акрила — Каталог</title>
 
-<!-- Иконка для браузера и для телефонов -->
+<!-- Иконки для телефонов -->
+<!-- Для iPhone используем отдельный квадратный файл -->
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<!-- Для Android и вкладок браузера оставляем прозрачный логотип -->
 <link rel="icon" type="image/png" href="logo.png">
-<link rel="apple-touch-icon" href="logo.png">
 
-<!-- Настройки для телефонов (открывается как приложение, без манифеста) -->
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Азбука">
-<meta name="mobile-web-app-capable" content="yes">
 
 <style>
   /* Светлая тема */
@@ -38,6 +39,7 @@
   
   /* ===== ШАПКА ===== */
   .header { padding: 12px 15px 8px; text-align: center; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+  /* ЗДЕСЬ САЙТ БЕРЕТ ВАШ КРАСИВЫЙ ПРОЗРАЧНЫЙ ЛОГОТИП */
   .site-logo { height: 45px; width: auto; object-fit: contain; margin-bottom: 10px; }
 
   .tabs { 
@@ -173,6 +175,7 @@
 <body>
 
   <div class="header">
+    <!-- ТУТ ОСТАЕТСЯ СТАРЫЙ ЛОГОТИП -->
     <img src="logo.png" alt="Азбука Акрила" class="site-logo" onerror="this.style.display='none'; document.getElementById('text-title').style.display='block';">
     <div id="text-title" style="display:none; font-size: 22px; font-weight: 600; margin-bottom: 10px; color: var(--accent);">Азбука Акрила</div>
     
