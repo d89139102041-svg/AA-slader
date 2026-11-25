@@ -5,16 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Азбука Акрила — Каталог</title>
 
-<link rel="icon" type="image/png" href="favicon.png">
+<!-- Иконка для браузера и для телефона -->
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+
+<!-- Настройки для телефона (открывается как приложение) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Азбука">
 
 <style>
-  /* НОВАЯ СВЕТЛАЯ ТЕМА */
+  /* Светлая тема */
   :root{ 
-    --bg: #f4f6f4;      /* Светлый фон */
-    --panel: #ffffff;   /* Белые панели */
-    --accent: #559c51;  /* Фирменный зеленый */
+    --bg: #f4f6f4;      
+    --panel: #ffffff;   
+    --accent: #559c51;  
     --accent-light: #6bb867; 
-    --text: #1a1c19;    /* Темный текст */
+    --text: #1a1c19;    
     --muted: #6c706c; 
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -69,7 +76,7 @@
     height: 20vh; 
     display: flex; flex-direction: column; align-items: center; justify-content: space-between;
     flex-shrink: 0; position: relative;
-    border: 1px solid #e0e3e0; /* Легкая рамочка для белого фона */
+    border: 1px solid #e0e3e0; 
     border-top: 4px solid var(--accent); 
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     transition: height 0.3s ease; 
@@ -92,7 +99,7 @@
   .main-content.photo-only .drawing-box { display: none !important; }
   .main-content.photo-only .photo-box { width: 100%; height: 100%; }
 
-  /* МАЛЕНЬКИЕ И АККУРАТНЫЕ СТРЕЛКИ */
+  /* МАЛЕНЬКИЕ СТРЕЛКИ */
   .nav-btn {
     position: absolute; top: 50%; transform: translateY(-50%); width: 30px; height: 30px;
     background: rgba(0, 0, 0, 0.4); border: none; border-radius: 50%; color: #fff;
