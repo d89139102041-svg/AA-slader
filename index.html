@@ -344,7 +344,7 @@
   const getPhotos = () => { const m = getModel(); return (m && m.photos) ? m.photos : []; };
 
   let currentPhotoSrc = '';
-  let isLightboxOpen = false; // Флаг, чтобы понимать, откуда мы свайпаем в лайтбоксе
+  let lbMode = 'models'; // 'models' - листаем модели (чертежи), 'photos' - листаем фото одной модели
 
   function haptic(ms=8){
     if (navigator.vibrate) { try{ navigator.vibrate(ms); }catch(e){} }
@@ -570,37 +570,52 @@
     currentPhoto=(currentPhoto+dir+photos.length)%photos.length;
     updateView();
   }
+
+  function changeModel(dir){
+    const models = DATA[currentCat].subcats[currentSubCat].models || [];
+    if(models.length<=1) return;
+    haptic();
+    currentModel = (currentModel + dir + models.length) % models.length;
+    currentPhoto = 0; currentPhotoSrc = '';
+    renderModels(); updateView(); updateHash();
+  }
+
   btnPrev.onclick=()=>changePhoto(-1);
   btnNext.onclick=()=>changePhoto(1);
 
-  /* ===== СВАЙП В КАТАЛОГЕ (по фото и по чертежу) ===== */
-  function handleSwipeEnd(startX, startY, endX, endY){
+  /* ===== СВАЙП В КАТАЛОГЕ ===== */
+  let tStartX=0,tStartY=0;
+  let tTargetIsDrawing = false;
+
+  drawingBoxEl.addEventListener('touchstart',e=>{
+    tStartX=e.changedTouches[0].clientX; tStartY=e.changedTouches[0].clientY;
+    tTargetIsDrawing = true;
+  },{passive:true});
+  drawingBoxEl.addEventListener('touchend',e=>{
+    handleMainSwipe(tStartX, tStartY, e.changedTouches[0].clientX, e.changedTouches[0].clientY, true);
+  },{passive:true});
+
+  photoBox.addEventListener('touchstart',e=>{
+    tStartX=e.changedTouches[0].clientX; tStartY=e.changedTouches[0].clientY;
+    tTargetIsDrawing = false;
+  },{passive:true});
+  photoBox.addEventListener('touchend',e=>{
+    handleMainSwipe(tStartX, tStartY, e.changedTouches[0].clientX, e.changedTouches[0].clientY, false);
+  },{passive:true});
+
+  function handleMainSwipe(startX, startY, endX, endY, isDrawingZone){
     const dx=endX-startX;
     const dy=endY-startY;
     if(Math.abs(dx)>40 && Math.abs(dx)>Math.abs(dy)*1.5){
-      const photos=getPhotos();
-      if(photos.length>1){
-        changePhoto(dx<0?1:-1);
+      if (isDrawingZone) {
+        changeModel(dx<0?1:-1);
       } else {
-        // Если фото нет (только чертёж), свайпаем модели
-        const models = DATA[currentCat].subcats[currentSubCat].models || [];
-        if(models.length>1){
-          haptic();
-          currentModel = (currentModel + (dx<0?1:-1) + models.length) % models.length;
-          currentPhoto=0; currentPhotoSrc='';
-          renderModels(); updateView(); updateHash();
-        }
+        const photos = getPhotos();
+        if (photos.length > 1) changePhoto(dx<0?1:-1);
+        else changeModel(dx<0?1:-1); 
       }
     }
   }
-
-  let tStartX=0,tStartY=0;
-  mainContentEl.addEventListener('touchstart',e=>{
-    tStartX=e.changedTouches[0].clientX; tStartY=e.changedTouches[0].clientY;
-  },{passive:true});
-  mainContentEl.addEventListener('touchend',e=>{
-    handleSwipeEnd(tStartX, tStartY, e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-  },{passive:true});
 
   /* ===== STICKY ЗАГОЛОВОК ===== */
   const observer = new IntersectionObserver(entries=>{
@@ -623,33 +638,51 @@
     requestAnimationFrame(()=>lbImg.classList.remove('dragging'));
   }
 
-  function openLightbox(src){
+  function openLightbox(type){
     haptic();
-    isLightboxOpen = true;
+    lbMode = type; // 'models' (если открыли чертёж) или 'photos' (если открыли фото)
     lightbox.showModal();
     document.body.classList.add('locked');
-    lbImg.src = withVersion(src);
-    updateLightboxNav();
+    
+    if (lbMode === 'models') {
+      const m = getModel();
+      lbImg.src = withVersion(m.drawing);
+      updateLightboxNav();
+    } else {
+      lbImg.src = withVersion(getPhotos()[currentPhoto]);
+      updateLightboxNav();
+    }
+    
     resetLbTransform();
     history.pushState({lightbox:true},'',location.hash);
   }
 
-  // Обновление кнопок и счетчика в лайтбоксе
   function updateLightboxNav() {
-    const m = getModel();
-    lbCounter.textContent = m.name;
-    const models = DATA[currentCat].subcats[currentSubCat].models || [];
-    if (models.length > 1) {
-      lbPrev.classList.add('show'); lbNext.classList.add('show');
-      syncDots(lbDots, models.length, currentModel, 'lb-dot');
+    if (lbMode === 'models') {
+      const models = DATA[currentCat].subcats[currentSubCat].models || [];
+      const m = getModel();
+      lbCounter.textContent = m.name;
+      if (models.length > 1) {
+        lbPrev.classList.add('show'); lbNext.classList.add('show');
+        syncDots(lbDots, models.length, currentModel, 'lb-dot');
+      } else {
+        lbPrev.classList.remove('show'); lbNext.classList.remove('show');
+        lbDots.innerHTML = '';
+      }
     } else {
-      lbPrev.classList.remove('show'); lbNext.classList.remove('show');
-      lbDots.innerHTML = '';
+      const photos = getPhotos();
+      lbCounter.textContent = `${currentPhoto + 1} / ${photos.length}`;
+      if (photos.length > 1) {
+        lbPrev.classList.add('show'); lbNext.classList.add('show');
+        syncDots(lbDots, photos.length, currentPhoto, 'lb-dot');
+      } else {
+        lbPrev.classList.remove('show'); lbNext.classList.remove('show');
+        lbDots.innerHTML = '';
+      }
     }
   }
-  
+
   function closeLightbox(fromHistory=false){
-    isLightboxOpen = false;
     if(lightbox.open) lightbox.close();
     document.body.classList.remove('locked');
     if(!fromHistory && history.state && history.state.lightbox){
@@ -659,23 +692,20 @@
 
   lbClose.onclick=()=>closeLightbox();
   
-  // В лайтбоксе свайп листает модели
   function lbChange(dir){
-    const models = DATA[currentCat].subcats[currentSubCat].models || [];
-    if(models.length<=1) return;
-    haptic();
-    currentModel = (currentModel + dir + models.length) % models.length;
-    currentPhoto = 0;
-    currentPhotoSrc = '';
-    renderModels(); 
-    updateView(); 
-    updateHash();
-    
-    // Обновляем лайтбокс
-    const m = getModel();
-    const srcToShow = (m.photos && m.photos.length) ? m.photos[currentPhoto] : m.drawing;
-    if(srcToShow) {
-      lbImg.src = withVersion(srcToShow);
+    if (lbMode === 'models') {
+      const models = DATA[currentCat].subcats[currentSubCat].models || [];
+      if(models.length<=1) return;
+      changeModel(dir);
+      const m = getModel();
+      if(m.drawing) lbImg.src = withVersion(m.drawing);
+      updateLightboxNav();
+    } else {
+      const photos = getPhotos();
+      if(photos.length<=1) return;
+      currentPhoto = (currentPhoto + dir + photos.length) % photos.length;
+      updateView(); // Обновляем фон
+      lbImg.src = withVersion(photos[currentPhoto]);
       updateLightboxNav();
     }
     resetLbTransform();
@@ -687,9 +717,9 @@
   lightbox.addEventListener('cancel',e=>{ e.preventDefault(); closeLightbox(); });
   lightbox.addEventListener('click',e=>{ if(e.target===lightbox) closeLightbox(); });
 
-  // Открытие лайтбокса по клику на фото или чертеж
-  photoEl.addEventListener('click',()=>{ if(getPhotos().length) openLightbox(getPhotos()[currentPhoto]); });
-  drawingBoxEl.addEventListener('click',()=>{ if(getModel().drawing) openLightbox(getModel().drawing); });
+  // Открытие лайтбокса
+  photoEl.addEventListener('click',()=>{ if(getPhotos().length) openLightbox('photos'); });
+  drawingBoxEl.addEventListener('click',()=>{ if(getModel().drawing) openLightbox('models'); });
 
   let lbTouchStartX=0, lbTouchStartY=0, lbTouchStartTime=0;
   let lbPinchStartDist=0, lbPinchStartScale=1;
@@ -753,12 +783,9 @@
       const dt=now-lbTouchStartTime;
       const absX=Math.abs(dx), absY=Math.abs(dy);
 
-      // Свайп вниз закрывает
       if(lbScale<=1.05 && dy>120 && absY>absX*1.5 && dt<500){ closeLightbox(); return; }
-      // Свайп в стороны листает модели
       if(lbScale<=1.05 && absX>60 && absX>absY*1.5 && dt<500){ lbChange(dx<0?1:-1); return; }
 
-      // Двойной тап для зума
       if(absX<8 && absY<8 && dt<300){
         if(now-lbLastTap<300){
           if(lbScale>1){
