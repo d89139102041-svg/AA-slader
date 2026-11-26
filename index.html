@@ -70,8 +70,9 @@
   .drawing-info{text-align:center; color:var(--text); font-size:14px; font-weight:700;
     width:100%; line-height:1.1; padding-top:4px;}
 
-  .photo-box{background:#111; border-radius:12px; flex-grow:1; position:relative; overflow:hidden;
-    display:flex; align-items:center; justify-content:center; border:1px solid #2a2c26;
+  /* Светлый фон вместо чёрного */
+  .photo-box{background:var(--bg); border-radius:12px; flex-grow:1; position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:center; border:1px solid var(--border);
     min-height:200px; touch-action:pan-y;
     transition:opacity .25s ease, transform .25s ease;}
   .photo-img{width:100%; height:100%; object-fit:contain; cursor:zoom-in;
@@ -83,13 +84,9 @@
     background:linear-gradient(90deg, var(--skeleton) 25%, var(--skeleton-shine) 50%, var(--skeleton) 75%);
     background-size:200% 100%;
     animation:shimmer 1.4s linear infinite;
-    display:none; z-index:4; border-radius:10px;
+    display:none; z-index:4; border-radius:12px;
   }
   .skeleton.show{display:block;}
-  .photo-box .skeleton{
-    background:linear-gradient(90deg, #1c1c1c 25%, #2a2a2a 50%, #1c1c1c 75%);
-    background-size:200% 100%;
-  }
   @keyframes shimmer{from{background-position:200% 0;}to{background-position:-200% 0;}}
 
   /* Плавная смена модели */
@@ -117,7 +114,7 @@
   .dots{position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
     display:none; gap:6px; z-index:10;}
   .dots.show{display:flex;}
-  .dot{width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.3); transition:background .3s;}
+  .dot{width:6px; height:6px; border-radius:50%; background:rgba(0,0,0,.2); transition:background .3s;}
   .dot.active{background:var(--accent);}
 
   /* ЛЕНТА */
@@ -246,8 +243,8 @@
   </dialog>
 
 <script>
-  // ВЕРСИЯ: принудительно сбрасывает кэш картинок (поменяйте на '3.0' в следующий раз)
-  const VERSION = '2.0';
+  // ВЕРСИЯ: поменяйте на '3.0', если снова будете обновлять фото на сервере
+  const VERSION = '2.1';
 
   const DATA = [
     { id:'mojki', title:'Мойки', subcats:[
@@ -474,11 +471,13 @@
   function loadPhoto(url){
     showSkeleton(skPhoto);
     photoEl.style.opacity='0';
+    
     if(url === currentPhotoSrc && photoEl.complete && photoEl.naturalWidth>0){
       hideSkeleton(skPhoto);
       photoEl.style.opacity='1';
       return;
     }
+    
     currentPhotoSrc=url;
     photoEl.onload = () => {
       hideSkeleton(skPhoto);
@@ -541,6 +540,7 @@
 
     if(hasPhotos){
       photoBox.style.display='flex';
+      showSkeleton(skPhoto); 
       photoEl.alt=`Фото: ${model.name} (${currentPhoto+1} из ${model.photos.length})`;
       loadPhoto(withVersion(model.photos[currentPhoto]));
 
@@ -553,7 +553,8 @@
         counterEl.classList.remove('show'); dotsEl.classList.remove('show'); dotsEl.innerHTML='';
       }
     } else {
-      photoBox.style.display='none'; photoEl.removeAttribute('src');
+      photoBox.style.display='none'; 
+      photoEl.removeAttribute('src');
       currentPhotoSrc='';
       btnPrev.classList.remove('show'); btnNext.classList.remove('show');
       counterEl.classList.remove('show'); dotsEl.classList.remove('show'); dotsEl.innerHTML='';
