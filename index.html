@@ -246,7 +246,8 @@
   </dialog>
 
 <script>
-  const VERSION = null;
+  // ВЕРСИЯ: принудительно сбрасывает кэш картинок (поменяйте на '3.0' в следующий раз)
+  const VERSION = '2.0';
 
   const DATA = [
     { id:'mojki', title:'Мойки', subcats:[
@@ -344,7 +345,7 @@
   const getPhotos = () => { const m = getModel(); return (m && m.photos) ? m.photos : []; };
 
   let currentPhotoSrc = '';
-  let lbMode = 'models'; // 'models' - листаем модели (чертежи), 'photos' - листаем фото одной модели
+  let lbMode = 'models';
 
   function haptic(ms=8){
     if (navigator.vibrate) { try{ navigator.vibrate(ms); }catch(e){} }
@@ -585,11 +586,9 @@
 
   /* ===== СВАЙП В КАТАЛОГЕ ===== */
   let tStartX=0,tStartY=0;
-  let tTargetIsDrawing = false;
 
   drawingBoxEl.addEventListener('touchstart',e=>{
     tStartX=e.changedTouches[0].clientX; tStartY=e.changedTouches[0].clientY;
-    tTargetIsDrawing = true;
   },{passive:true});
   drawingBoxEl.addEventListener('touchend',e=>{
     handleMainSwipe(tStartX, tStartY, e.changedTouches[0].clientX, e.changedTouches[0].clientY, true);
@@ -597,7 +596,6 @@
 
   photoBox.addEventListener('touchstart',e=>{
     tStartX=e.changedTouches[0].clientX; tStartY=e.changedTouches[0].clientY;
-    tTargetIsDrawing = false;
   },{passive:true});
   photoBox.addEventListener('touchend',e=>{
     handleMainSwipe(tStartX, tStartY, e.changedTouches[0].clientX, e.changedTouches[0].clientY, false);
@@ -640,7 +638,7 @@
 
   function openLightbox(type){
     haptic();
-    lbMode = type; // 'models' (если открыли чертёж) или 'photos' (если открыли фото)
+    lbMode = type; 
     lightbox.showModal();
     document.body.classList.add('locked');
     
@@ -704,7 +702,7 @@
       const photos = getPhotos();
       if(photos.length<=1) return;
       currentPhoto = (currentPhoto + dir + photos.length) % photos.length;
-      updateView(); // Обновляем фон
+      updateView(); 
       lbImg.src = withVersion(photos[currentPhoto]);
       updateLightboxNav();
     }
@@ -717,7 +715,6 @@
   lightbox.addEventListener('cancel',e=>{ e.preventDefault(); closeLightbox(); });
   lightbox.addEventListener('click',e=>{ if(e.target===lightbox) closeLightbox(); });
 
-  // Открытие лайтбокса
   photoEl.addEventListener('click',()=>{ if(getPhotos().length) openLightbox('photos'); });
   drawingBoxEl.addEventListener('click',()=>{ if(getModel().drawing) openLightbox('models'); });
 
