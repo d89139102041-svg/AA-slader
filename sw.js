@@ -1,4 +1,4 @@
-const CACHE = 'azbuka-v2'; // Обновил версию кэша, чтобы старые файлы удалились
+const CACHE = 'azbuka-v3'; // Обновите версию, чтобы старый кэш удалился
 const PRECACHE = [
   './',
   './index.html',
