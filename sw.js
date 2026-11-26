@@ -1,5 +1,4 @@
-// Простой service worker: кэш "сеть-сначала, при офлайне — кэш"
-const CACHE = 'azbuka-v1';
+const CACHE = 'azbuka-v2'; // Обновил версию кэша, чтобы старые файлы удалились
 const PRECACHE = [
   './',
   './index.html',
@@ -28,7 +27,6 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
 
-  // Для картинок — сначала кэш, потом сеть (offline-friendly)
   if (req.destination === 'image') {
     e.respondWith(
       caches.match(req).then(hit => hit || fetch(req).then(res => {
@@ -40,7 +38,6 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // HTML/JS/CSS — сеть, при неудаче — кэш
   e.respondWith(
     fetch(req).then(res => {
       const copy = res.clone();
