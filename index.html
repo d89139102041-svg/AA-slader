@@ -260,7 +260,7 @@
 
 <script>
   // ВЕРСИЯ: поменяйте на '3.0', если снова будете обновлять фото на сервере
-  const VERSION = '2.1';
+  const VERSION = '2.2';
 
   const DATA = [
     { id:'mojki', title:'Мойки', subcats:[
@@ -311,7 +311,8 @@
         { id:'r5', name:'R5 (Радиус 5 мм)', drawing:'draw-kromka-3.jpg', photos:[] },
         { id:'r3', name:'R3 (Радиус 3 мм)', drawing:'draw-kromka-4.jpg', photos:[] },
         { id:'45', name:'45 градусов', drawing:'draw-kromka-5.jpg', photos:[] },
-        { id:'neproliv', name:'Не проливайка (Защитный бортик)', drawing:'draw-kromka-6.jpg', photos:[] }
+        { id:'neproliv', name:'Не проливайка (Защитный бортик)', drawing:'draw-kromka-6.jpg', photos:[] },
+        { id:'skos45', name:'Скос под 45°', drawing:'draw-kromka-7.jpg', photos:[] }
       ]}
     ]},
     { id:'obn', title:'Обнижение и проточки', subcats:[
@@ -323,11 +324,41 @@
     ]},
     /* ===== ГАЛЕРЕЯ — только живые фото ===== */
     { id:'galereya', title:'Галерея', photosOnly:true, subcats:[
-      { id:'ostrova', name:'Острова', models:[] },
-      { id:'polki', name:'Полки', models:[
-        { id:'polka-p1', name:'Полка П-1', drawing:'', photos:['photo-shelf-1-1.jpg','photo-shelf-1-2.jpg','photo-shelf-1-3.jpg'] }
+      { id:'ostrova', name:'Острова', models:[
+        { id:'ostrova-main', name:'Острова', drawing:'', photos:[
+          'photo-ostrova-1.jpg','photo-ostrova-2.jpg','photo-ostrova-3.jpg','photo-ostrova-4.jpg','photo-ostrova-5.jpg'
+        ]}
       ]},
-      { id:'raznoe', name:'Разное', models:[] }
+      { id:'polki', name:'Полки', models:[
+        { id:'polki-main', name:'Полки', drawing:'', photos:[
+          'photo-polki-1.jpg','photo-polki-2.jpg','photo-polki-3.jpg','photo-polki-4.jpg','photo-polki-5.jpg'
+        ]}
+      ]},
+      { id:'doshechki', name:'Дощечки', models:[
+        { id:'doshechki-main', name:'Дощечки', drawing:'', photos:[
+          'photo-doshechki-1.jpg','photo-doshechki-2.jpg','photo-doshechki-3.jpg','photo-doshechki-4.jpg','photo-doshechki-5.jpg'
+        ]}
+      ]},
+      { id:'opory', name:'Опоры', models:[
+        { id:'opory-main', name:'Опоры', drawing:'', photos:[
+          'photo-opory-1.jpg','photo-opory-2.jpg','photo-opory-3.jpg','photo-opory-4.jpg','photo-opory-5.jpg'
+        ]}
+      ]},
+      { id:'podokonniki', name:'Подоконники', models:[
+        { id:'podokonniki-main', name:'Подоконники', drawing:'', photos:[
+          'photo-podokonniki-1.jpg','photo-podokonniki-2.jpg','photo-podokonniki-3.jpg','photo-podokonniki-4.jpg','photo-podokonniki-5.jpg'
+        ]}
+      ]},
+      { id:'lestnicy', name:'Лестницы', models:[
+        { id:'lestnicy-main', name:'Лестницы', drawing:'', photos:[
+          'photo-lestnicy-1.jpg','photo-lestnicy-2.jpg','photo-lestnicy-3.jpg','photo-lestnicy-4.jpg','photo-lestnicy-5.jpg'
+        ]}
+      ]},
+      { id:'skamejki', name:'Скамейки', models:[
+        { id:'skamejki-main', name:'Скамейки', drawing:'', photos:[
+          'photo-skamejki-1.jpg','photo-skamejki-2.jpg','photo-skamejki-3.jpg','photo-skamejki-4.jpg','photo-skamejki-5.jpg'
+        ]}
+      ]}
     ]}
   ];
 
@@ -552,7 +583,6 @@
     infoEl.textContent=model.name;
     modelSticky.textContent=model.name;
 
-    // В галерее плашка-название висит поверх фото всегда
     if(photosOnly) modelSticky.classList.add('show');
 
     const hasDrawing = !photosOnly && !!(model.drawing && model.drawing.trim());
