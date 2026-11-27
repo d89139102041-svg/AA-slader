@@ -47,14 +47,25 @@
   .tab.active{background:var(--accent); color:#fff; border-color:var(--accent);
     font-weight:600; box-shadow:0 4px 12px rgba(85,156,81,.3);}
 
-  .sub-tabs{display:none; gap:8px; justify-content:flex-start; margin-top:8px;
-    overflow-x:auto; padding:0 5px 2px; width:100%; animation:fadeIn .3s ease;}
-  .sub-tabs.show{display:flex;}
+  /* ПОДРУБРИКИ — заметнее */
+  .sub-tabs-wrap{display:none; width:100%; margin-top:10px;}
+  .sub-tabs-wrap.show{display:block; animation:fadeIn .3s ease;}
+  .sub-hint{font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.02em;
+    text-align:left; padding:0 4px 6px; text-transform:uppercase;}
+  .sub-tabs{display:flex; gap:4px; justify-content:flex-start;
+    overflow-x:auto; padding:4px; width:100%;
+    background:var(--subtab-bg); border-radius:12px;
+    position:relative; scroll-behavior:smooth;}
   .sub-tabs::-webkit-scrollbar{display:none;}
-  .sub-tab{padding:5px 14px; border-radius:12px; cursor:pointer; white-space:nowrap;
-    border:1px solid transparent; background:var(--subtab-bg); color:var(--text);
-    font-size:12px; transition:all .3s ease;}
-  .sub-tab.active{background:rgba(85,156,81,.15); color:var(--accent); font-weight:600; border-color:var(--accent);}
+  .sub-tabs::after{content:''; position:absolute; right:0; top:0; bottom:0; width:28px;
+    background:linear-gradient(to left, var(--subtab-bg), transparent);
+    pointer-events:none; border-radius:0 12px 12px 0;}
+  .sub-tab{padding:8px 16px; border-radius:9px; cursor:pointer; white-space:nowrap;
+    border:none; background:transparent; color:var(--muted);
+    font-size:14px; font-weight:600; transition:all .25s ease;}
+  .sub-tab.active{background:#fff; color:var(--accent);
+    box-shadow:0 2px 6px rgba(0,0,0,.08);}
+
   @keyframes fadeIn{from{opacity:0;transform:translateY(-5px);}to{opacity:1;transform:translateY(0);}}
 
   /* ОСНОВНОЙ БЛОК */
@@ -70,7 +81,6 @@
   .drawing-info{text-align:center; color:var(--text); font-size:14px; font-weight:700;
     width:100%; line-height:1.1; padding-top:4px;}
 
-  /* Светлый фон вместо чёрного */
   .photo-box{background:var(--bg); border-radius:12px; flex-grow:1; position:relative; overflow:hidden;
     display:flex; align-items:center; justify-content:center; border:1px solid var(--border);
     min-height:200px; touch-action:pan-y;
@@ -89,7 +99,6 @@
   .skeleton.show{display:block;}
   @keyframes shimmer{from{background-position:200% 0;}to{background-position:-200% 0;}}
 
-  /* Плавная смена модели */
   .main-content.switching .drawing-img,
   .main-content.switching .photo-img{opacity:0; transform:translateY(6px);}
 
@@ -184,7 +193,10 @@
 
   @media (min-width:768px){
     .site-logo{height:70px;}
-    .tabs,.sub-tabs{justify-content:center;}
+    .tabs{justify-content:center;}
+    .sub-tabs-wrap{max-width:720px; margin-left:auto; margin-right:auto;}
+    .sub-tabs{justify-content:center;}
+    .sub-hint{text-align:center;}
     .main-content{flex-direction:row; padding:20px; gap:20px; height:calc(100vh - 170px);}
     .drawing-box{width:25%; height:100%; padding:15px 10px; border-top:1px solid var(--border);
       border-left:6px solid var(--accent);}
@@ -208,10 +220,14 @@
       onerror="this.style.display='none'; document.getElementById('text-title').style.display='block';">
     <div id="text-title" style="display:none; font-size:22px; font-weight:600; margin-bottom:10px; color:var(--accent);">Азбука Акрила</div>
     <div class="tabs" id="tabs"></div>
-    <div class="sub-tabs" id="subTabs"></div>
+
+    <div class="sub-tabs-wrap" id="subTabsWrap">
+      <div class="sub-hint" id="subHint">Выберите тип:</div>
+      <div class="sub-tabs" id="subTabs"></div>
+    </div>
   </div>
 
-  <div class="main-content" id="mainContent">
+  <div class="main-content" id="mainContent" tabindex="0">
     <div class="model-sticky" id="modelSticky"></div>
 
     <div class="drawing-box" id="drawingBox">
@@ -315,7 +331,9 @@
   let currentCat=0, currentSubCat=0, currentModel=0, currentPhoto=0;
 
   const tabsEl=document.getElementById('tabs');
+  const subTabsWrapEl=document.getElementById('subTabsWrap');
   const subTabsEl=document.getElementById('subTabs');
+  const subHintEl=document.getElementById('subHint');
   const stripEl=document.getElementById('modelStrip');
   const mainContentEl=document.getElementById('mainContent');
   const drawingBoxEl=document.getElementById('drawingBox');
@@ -424,7 +442,9 @@
     subTabsEl.innerHTML='';
     const subcats=DATA[currentCat].subcats;
     if(subcats.length>1){
-      subTabsEl.classList.add('show');
+      subTabsWrapEl.classList.add('show');
+      // Подсказка зависит от категории
+      subHintEl.textContent = DATA[currentCat].id==='mojki' ? 'Выберите тип мойки:' : 'Выберите раздел:';
       subcats.forEach((sub,i)=>{
         const btn=document.createElement('div');
         btn.className='sub-tab'+(i===currentSubCat?' active':'');
@@ -437,7 +457,9 @@
         };
         subTabsEl.appendChild(btn);
       });
-    } else subTabsEl.classList.remove('show');
+    } else {
+      subTabsWrapEl.classList.remove('show');
+    }
   }
 
   function renderModels(){
@@ -471,13 +493,13 @@
   function loadPhoto(url){
     showSkeleton(skPhoto);
     photoEl.style.opacity='0';
-    
+
     if(url === currentPhotoSrc && photoEl.complete && photoEl.naturalWidth>0){
       hideSkeleton(skPhoto);
       photoEl.style.opacity='1';
       return;
     }
-    
+
     currentPhotoSrc=url;
     photoEl.onload = () => {
       hideSkeleton(skPhoto);
@@ -540,7 +562,7 @@
 
     if(hasPhotos){
       photoBox.style.display='flex';
-      showSkeleton(skPhoto); 
+      showSkeleton(skPhoto);
       photoEl.alt=`Фото: ${model.name} (${currentPhoto+1} из ${model.photos.length})`;
       loadPhoto(withVersion(model.photos[currentPhoto]));
 
@@ -553,7 +575,7 @@
         counterEl.classList.remove('show'); dotsEl.classList.remove('show'); dotsEl.innerHTML='';
       }
     } else {
-      photoBox.style.display='none'; 
+      photoBox.style.display='none';
       photoEl.removeAttribute('src');
       currentPhotoSrc='';
       btnPrev.classList.remove('show'); btnNext.classList.remove('show');
@@ -611,7 +633,7 @@
       } else {
         const photos = getPhotos();
         if (photos.length > 1) changePhoto(dx<0?1:-1);
-        else changeModel(dx<0?1:-1); 
+        else changeModel(dx<0?1:-1);
       }
     }
   }
@@ -639,10 +661,10 @@
 
   function openLightbox(type){
     haptic();
-    lbMode = type; 
+    lbMode = type;
     lightbox.showModal();
     document.body.classList.add('locked');
-    
+
     if (lbMode === 'models') {
       const m = getModel();
       lbImg.src = withVersion(m.drawing);
@@ -651,7 +673,7 @@
       lbImg.src = withVersion(getPhotos()[currentPhoto]);
       updateLightboxNav();
     }
-    
+
     resetLbTransform();
     history.pushState({lightbox:true},'',location.hash);
   }
@@ -690,7 +712,7 @@
   }
 
   lbClose.onclick=()=>closeLightbox();
-  
+
   function lbChange(dir){
     if (lbMode === 'models') {
       const models = DATA[currentCat].subcats[currentSubCat].models || [];
@@ -703,7 +725,7 @@
       const photos = getPhotos();
       if(photos.length<=1) return;
       currentPhoto = (currentPhoto + dir + photos.length) % photos.length;
-      updateView(); 
+      updateView();
       lbImg.src = withVersion(photos[currentPhoto]);
       updateLightboxNav();
     }
@@ -825,10 +847,37 @@
     clampLbPan(); applyLbTransform();
   },{passive:false});
 
-  document.addEventListener('keydown',e=>{
-    if(!lightbox.open) return;
-    if(e.key==='ArrowLeft') lbChange(-1);
-    if(e.key==='ArrowRight') lbChange(1);
+  /* ===== КЛАВИАТУРА ===== */
+  document.addEventListener('keydown', e => {
+    // 1) Лайтбокс имеет приоритет
+    if (lightbox.open) {
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); lbChange(-1); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); lbChange(1); }
+      if (e.key === 'Escape')     { e.preventDefault(); closeLightbox(); }
+      return;
+    }
+
+    // 2) Не мешаем вводу текста
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
+
+    // 3) Основной экран
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      const dir = e.key === 'ArrowRight' ? 1 : -1;
+      const photos = getPhotos();
+      if (photos.length > 1) {
+        changePhoto(dir);   // листаем фото
+      } else {
+        changeModel(dir);   // нет фото — листаем модели
+      }
+    }
+
+    // 4) Вверх/вниз — переключение моделей
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      changeModel(e.key === 'ArrowDown' ? 1 : -1);
+    }
   });
 
   window.addEventListener('popstate',e=>{
